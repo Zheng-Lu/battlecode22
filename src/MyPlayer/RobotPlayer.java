@@ -73,10 +73,10 @@ public strictfp class RobotPlayer {
                     case ARCHON:     runArchon(rc);  break;
                     case MINER:      runMiner(rc);   break;
                     case SOLDIER:    runSoldier(rc); break;
-                    case LABORATORY: // Examplefuncsplayer doesn't use any of these robot types below.
-                    case WATCHTOWER: // You might want to give them a try!
-                    case BUILDER:
-                    case SAGE:       break;
+                    case LABORATORY: runLaboratory(rc); break;// Examplefuncsplayer doesn't use any of these robot types below.
+                    case WATCHTOWER: runWatchtotwer(rc); break;// You might want to give them a try!
+                    case BUILDER:    runBuilder(rc); break;
+                    case SAGE:       runSage(rc); break;
                 }
             } catch (GameActionException e) {
                 // Oh no! It looks like we did something illegal in the Battlecode world. You should
@@ -109,6 +109,8 @@ public strictfp class RobotPlayer {
     static void runArchon(RobotController rc) throws GameActionException {
         // Pick a direction to build in.
         Direction dir = directions[rng.nextInt(directions.length)];
+        Direction dir2 = directions[rng.nextInt(directions.length)];
+
         if (rng.nextBoolean()) {
             // Let's try to build a miner.
             rc.setIndicatorString("Trying to build a miner");
@@ -120,6 +122,20 @@ public strictfp class RobotPlayer {
             rc.setIndicatorString("Trying to build a soldier");
             if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
                 rc.buildRobot(RobotType.SOLDIER, dir);
+            }
+        }
+
+        if (rng.nextBoolean()) {
+            // Build a builder.
+            rc.setIndicatorString("Trying to build a Builder");
+            if (rc.canBuildRobot(RobotType.BUILDER, dir2)) {
+                rc.buildRobot(RobotType.BUILDER, dir2);
+            }
+        } else {
+            // Build a miner.
+            rc.setIndicatorString("Trying to build a miner");
+            if (rc.canBuildRobot(RobotType.MINER, dir2)) {
+                rc.buildRobot(RobotType.MINER, dir2);
             }
         }
     }
@@ -178,7 +194,11 @@ public strictfp class RobotPlayer {
     }
 
     static void runLaboratory(RobotController rc) throws GameActionException {
-
+        if (rc.isActionReady()){
+            if (rc.canTransmute()) {
+                rc.transmute();
+            }
+        }
     }
 
     static void runWatchtotwer(RobotController rc) throws GameActionException {
@@ -186,12 +206,35 @@ public strictfp class RobotPlayer {
     }
 
     static void runBuilder(RobotController rc) throws GameActionException {
+        Direction dir = directions[rng.nextInt(directions.length)];
+        Direction dir2 = directions[rng.nextInt(directions.length)];
+
+        if (rc.isActionReady()) {
+            // Build a laboratory
+            if (rc.canBuildRobot(RobotType.LABORATORY, dir)) {
+                rc.buildRobot(RobotType.LABORATORY, dir);
+            }
+
+            // Build a Watchtotwer
+            if (rc.canBuildRobot(RobotType.WATCHTOWER, dir2)) {
+                rc.buildRobot(RobotType.WATCHTOWER, dir2);
+            }
+        }
+
+        // Also try to move randomly.
+        Direction dir3 = directions[rng.nextInt(directions.length)];
+        if (rc.canMove(dir3)) {
+            rc.move(dir3);
+            System.out.println("I moved!");
+        }
 
     }
 
     static void runSage(RobotController rc) throws GameActionException {
-
+        if (rc.isActionReady()){
+            if (rc.canEnvision(AnomalyType.CHARGE)){
+                rc.envision(AnomalyType.CHARGE);
+            }
+        }
     }
-
-
 }

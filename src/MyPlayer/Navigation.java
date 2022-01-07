@@ -14,7 +14,7 @@ class SafetyPolicyCrunch extends Bot implements NavSafetyPolicy {
     }
 
     public boolean isSafeToMoveTo(MapLocation loc) throws GameActionException {
-        if(rc.canSenseLocation(loc) && rc.senseRubble(loc) > 50) {
+        if(rc.canSenseLocation(loc) && rc.senseRubble(loc) > 80) {
             return false;
         }
         return true;
@@ -27,12 +27,17 @@ public class Navigation extends Bot {
         super(r);
     }
 
+    // TODO: Move to specific given destination
     public static void moveTo(MapLocation destination) throws  GameActionException{
 
     }
 
+    // TODO: Exploring map strategy
     public static void explore() throws GameActionException{
-        for (Direction dir : )
+        Direction[] dirs = new Direction[2];
+        for (Direction dir : dirs){
+
+        }
 
     }
 }

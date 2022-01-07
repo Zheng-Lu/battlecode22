@@ -42,7 +42,7 @@ public class Bot {
         round = rc.getRoundNum();
         Laboratories = new MapLocation[100];
         Watchtotweres = new MapLocation[100];
-
+        rc.senseNearbyRobots(50, enemy);
     }
 
 }

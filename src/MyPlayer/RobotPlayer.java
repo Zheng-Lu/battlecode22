@@ -70,13 +70,13 @@ public strictfp class RobotPlayer {
                 // use different strategies on different robots. If you wish, you are free to rewrite
                 // this into a different control structure!
                 switch (rc.getType()) {
-                    case ARCHON:     runArchon(rc);  break;
-                    case MINER:      runMiner(rc);   break;
-                    case SOLDIER:    runSoldier(rc); break;
-                    case LABORATORY: runLaboratory(rc); break;// Examplefuncsplayer doesn't use any of these robot types below.
-                    case WATCHTOWER: runWatchtotwer(rc); break;// You might want to give them a try!
-                    case BUILDER:    runBuilder(rc); break;
-                    case SAGE:       runSage(rc); break;
+                    case ARCHON:     Archon.run(rc);  break;
+                    case MINER:      Miner.run(rc);   break;
+                    case SOLDIER:    Soldier.run(rc); break;
+                    case LABORATORY: Laboratory.run(rc); break;// Examplefuncsplayer doesn't use any of these robot types below.
+                    case WATCHTOWER: Watchtotwer.run(rc); break;// You might want to give them a try!
+                    case BUILDER:    Builder.run(rc); break;
+                    case SAGE:       Sage.run(rc); break;
                 }
             } catch (GameActionException e) {
                 // Oh no! It looks like we did something illegal in the Battlecode world. You should
@@ -100,141 +100,5 @@ public strictfp class RobotPlayer {
         }
 
         // Your code should never reach here (unless it's intentional)! Self-destruction imminent...
-    }
-
-    /**
-     * Run a single turn for an Archon.
-     * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
-     */
-    static void runArchon(RobotController rc) throws GameActionException {
-        // Pick a direction to build in.
-        Direction dir = directions[rng.nextInt(directions.length)];
-        Direction dir2 = directions[rng.nextInt(directions.length)];
-
-        if (rng.nextBoolean()) {
-            // Let's try to build a miner.
-            rc.setIndicatorString("Trying to build a miner");
-            if (rc.canBuildRobot(RobotType.MINER, dir)) {
-                rc.buildRobot(RobotType.MINER, dir);
-            }
-        } else {
-            // Let's try to build a soldier.
-            rc.setIndicatorString("Trying to build a soldier");
-            if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
-                rc.buildRobot(RobotType.SOLDIER, dir);
-            }
-        }
-
-        if (rng.nextBoolean()) {
-            // Build a builder.
-            rc.setIndicatorString("Trying to build a Builder");
-            if (rc.canBuildRobot(RobotType.BUILDER, dir2)) {
-                rc.buildRobot(RobotType.BUILDER, dir2);
-            }
-        } else {
-            // Build a miner.
-            rc.setIndicatorString("Trying to build a miner");
-            if (rc.canBuildRobot(RobotType.MINER, dir2)) {
-                rc.buildRobot(RobotType.MINER, dir2);
-            }
-        }
-    }
-
-    /**
-     * Run a single turn for a Miner.
-     * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
-     */
-    static void runMiner(RobotController rc) throws GameActionException {
-        // Try to mine on squares around us.
-        MapLocation me = rc.getLocation();
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dy = -1; dy <= 1; dy++) {
-                MapLocation mineLocation = new MapLocation(me.x + dx, me.y + dy);
-                // Notice that the Miner's action cooldown is very low.
-                // You can mine multiple times per turn!
-                while (rc.canMineGold(mineLocation)) {
-                    rc.mineGold(mineLocation);
-                }
-                while (rc.canMineLead(mineLocation)) {
-                    rc.mineLead(mineLocation);
-                }
-            }
-        }
-
-        // Also try to move randomly.
-        Direction dir = directions[rng.nextInt(directions.length)];
-        if (rc.canMove(dir)) {
-            rc.move(dir);
-            System.out.println("I moved!");
-        }
-    }
-
-    /**
-     * Run a single turn for a Soldier.
-     * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
-     */
-    static void runSoldier(RobotController rc) throws GameActionException {
-        // Try to attack someone
-        int radius = rc.getType().actionRadiusSquared;
-        Team opponent = rc.getTeam().opponent();
-        RobotInfo[] enemies = rc.senseNearbyRobots(radius, opponent);
-        if (enemies.length > 0) {
-            MapLocation toAttack = enemies[0].location;
-            if (rc.canAttack(toAttack)) {
-                rc.attack(toAttack);
-            }
-        }
-
-        // Also try to move randomly.
-        Direction dir = directions[rng.nextInt(directions.length)];
-        if (rc.canMove(dir)) {
-            rc.move(dir);
-            System.out.println("I moved!");
-        }
-    }
-
-    static void runLaboratory(RobotController rc) throws GameActionException {
-        if (rc.isActionReady()){
-            if (rc.canTransmute()) {
-                rc.transmute();
-            }
-        }
-    }
-
-    static void runWatchtotwer(RobotController rc) throws GameActionException {
-
-    }
-
-    static void runBuilder(RobotController rc) throws GameActionException {
-        Direction dir = directions[rng.nextInt(directions.length)];
-        Direction dir2 = directions[rng.nextInt(directions.length)];
-
-        if (rc.isActionReady()) {
-            // Build a laboratory
-            if (rc.canBuildRobot(RobotType.LABORATORY, dir)) {
-                rc.buildRobot(RobotType.LABORATORY, dir);
-            }
-
-            // Build a Watchtotwer
-            if (rc.canBuildRobot(RobotType.WATCHTOWER, dir2)) {
-                rc.buildRobot(RobotType.WATCHTOWER, dir2);
-            }
-        }
-
-        // Also try to move randomly.
-        Direction dir3 = directions[rng.nextInt(directions.length)];
-        if (rc.canMove(dir3)) {
-            rc.move(dir3);
-            System.out.println("I moved!");
-        }
-
-    }
-
-    static void runSage(RobotController rc) throws GameActionException {
-        if (rc.isActionReady()){
-            if (rc.canEnvision(AnomalyType.CHARGE)){
-                rc.envision(AnomalyType.CHARGE);
-            }
-        }
     }
 }

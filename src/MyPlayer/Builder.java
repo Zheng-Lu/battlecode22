@@ -12,6 +12,7 @@ public class Builder extends RobotPlayer{
 
     }
 
+
     // TODO:
     void build(RobotType type){
         MapLocation myLoc = rc.getLocation();
@@ -30,7 +31,7 @@ public class Builder extends RobotPlayer{
     public static void run(RobotController rc) throws GameActionException {
         Direction dir = directions[rng.nextInt(directions.length)];
         Direction dir2 = directions[rng.nextInt(directions.length)];
-
+        
         if (rc.isActionReady()) {
             // Build a laboratory
             if (rc.canBuildRobot(RobotType.LABORATORY, dir)) {

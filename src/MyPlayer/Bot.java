@@ -19,13 +19,24 @@ public class Bot {
     public static MapLocation[] Watchtotweres;
     public static int numWatchtotwers;
     public static Random rand;
-    public static int[] unitCounts = {0,0,0,0,0,0,0,0,0,0};
+    public static Direction lastExploreDir;
 
     public static enum Symmetry {
         VERTICAL,
         HORIZONTAL,
         ROTATIONAL,
     }
+
+    public static Direction[] directions = {
+            Direction.NORTH,
+            Direction.NORTHEAST,
+            Direction.EAST,
+            Direction.SOUTHEAST,
+            Direction.SOUTH,
+            Direction.SOUTHWEST,
+            Direction.WEST,
+            Direction.NORTHWEST
+    };
 
     public static int turnCount = 0;
     public static int numMiners = 0;
@@ -43,6 +54,10 @@ public class Bot {
         Laboratories = new MapLocation[100];
         Watchtotweres = new MapLocation[100];
         rc.senseNearbyRobots(50, enemy);
+    }
+
+    static Direction randomDirection() {
+        return directions[(int) (Math.random() * directions.length)];
     }
 
 }

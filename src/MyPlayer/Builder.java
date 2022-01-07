@@ -8,11 +8,6 @@ public class Builder extends RobotPlayer{
     Direction[] dirs = Direction.values();
 
     // TODO:
-    void tryBuilding(){
-
-    }
-
-    // TODO:
     void build(RobotType type){
         MapLocation myLoc = rc.getLocation();
         Direction dir = Direction.NORTH;

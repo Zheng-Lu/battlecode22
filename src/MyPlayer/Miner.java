@@ -3,6 +3,9 @@ package MyPlayer;
 import battlecode.common.*;
 import java.util.*;
 
+import static MyPlayer.Navigation.explore;
+import static MyPlayer.Navigation.moveTo;
+
 public class Miner extends RobotPlayer{
     static RobotController rc;
 
@@ -47,11 +50,12 @@ public class Miner extends RobotPlayer{
             else {
                 // TODO: write a moveTo(MapLocation loc) function
                 // moveTo(targetMineLoc)
+                moveTo(targetMineLoc);
             }
         }
         else {
             // TODO: write a explore() function to explore the map to find resources
-            // explore();
+            explore();
         }
     }
 }

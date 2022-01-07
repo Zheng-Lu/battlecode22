@@ -7,7 +7,6 @@ public class Archon extends RobotPlayer {
      * Run a single turn for an Archon.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
      */
-
     // TODO: Building Robot Strategy
     public static void run(RobotController rc) throws GameActionException {
         // Pick a direction to build in.

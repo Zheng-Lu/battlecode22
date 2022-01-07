@@ -49,6 +49,7 @@ public class Miner extends RobotPlayer{
             }
             else {
                 // TODO: write a moveTo(MapLocation loc) function
+
                 // moveTo(targetMineLoc)
                 moveTo(targetMineLoc);
             }

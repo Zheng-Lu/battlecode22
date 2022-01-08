@@ -124,29 +124,6 @@ public strictfp class RobotPlayer {
         }
     }
 
-    static class Tuple implements Comparable<Tuple>{
-        Direction dir;
-        Integer priority;
-
-        public Tuple(Direction dir, Integer priority){
-            this.dir = dir;
-            this.priority = priority;
-        }
-
-        public Direction getDir(){
-            return this.dir;
-        }
-
-        // public Integer getPriority(){
-        //     return this.priority;
-        // }
-
-        @Override
-        public int compareTo(Tuple tup) {
-            return this.priority - tup.priority;
-        }
-    }
-
     /**
      * Run a single turn for a Miner.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
@@ -199,7 +176,8 @@ public strictfp class RobotPlayer {
             rc.move(curLoc.directionTo(destination));
         }
         else{
-            PriorityQueue<Tuple> pQueue = new PriorityQueue<Tuple>();
+            Direction finalDir = null;
+            Integer minPriority = 9999999;
             
             System.out.println("Destination : "+ destination.toString());
             System.out.println("Start : "+ curLoc.toString()+ rc.senseRubble(curLoc));
@@ -214,13 +192,16 @@ public strictfp class RobotPlayer {
                 System.out.println("Adjacent "+ adjLoc.toString() + "with cost " + rc.senseRubble(adjLoc));
                     
                 System.out.println("Priority : " + priority + "=" + rc.senseRubble(adjLoc) + " + " + adjLoc.distanceSquaredTo(destination));
-                pQueue.add(new Tuple(direction, priority));
+                if(priority < minPriority){
+                    minPriority = priority;
+                    finalDir = direction;
+                }
                         
 
             }
             
-            System.out.println("Final direction" + pQueue.poll().getDir());
-            rc.move(pQueue.poll().getDir());
+            System.out.println("Final direction" + finalDir);
+            rc.move(finalDir);
         }
 
     }

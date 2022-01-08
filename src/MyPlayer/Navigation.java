@@ -8,10 +8,10 @@ interface NavSafetyPolicy {
     public boolean isSafeToMoveTo(MapLocation loc) throws GameActionException;
 }
 
-class SafetyPolicyCrunch extends Bot implements NavSafetyPolicy {
+class SafetyPolicyAvoidAllUnits extends Bot implements NavSafetyPolicy {
 
-    public SafetyPolicyCrunch(RobotController r) throws GameActionException {
-        super(r);
+    public SafetyPolicyAvoidAllUnits() throws GameActionException {
+        super();
     }
 
     public boolean isSafeToMoveTo(MapLocation loc) throws GameActionException {
@@ -285,7 +285,21 @@ public class Navigation extends Bot {
             }
             rc.move(allDirections.get(1));
         }
+    }
 
+    public static boolean goTo(MapLocation theDest, NavSafetyPolicy theSafety) throws GameActionException {
+        if (!theDest.equals(dest)) {
+            dest = theDest;
+            bugState = BugState.DIRECT;
+        }
+
+        if (here.equals(dest))
+            return false;
+
+        safety = theSafety;
+
+        bugMove();
+        return true;
     }
 
     // TODO: Exploring map strategy

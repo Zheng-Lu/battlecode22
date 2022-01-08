@@ -1,15 +1,36 @@
 package MyPlayer;
 
 import battlecode.common.*;
+import battlecode.util.*;
 import java.util.*;
 
-import static MyPlayer.Navigation.explore;
-import static MyPlayer.Navigation.moveTo;
+import static MyPlayer.Navigation.*;
 
-public class Miner extends RobotPlayer{
-    static RobotController rc;
-
+public class Miner extends Unit{
     MapLocation targetMineLoc;
+
+    public Miner(RobotController r) throws GameActionException {
+        super(r);
+    }
+
+    public void run() throws GameActionException {
+        super.run();
+        if(targetMineLoc == null || !(targetMineLoc.equals(here) && rc.senseLead(here) > 0) && turnCount % 10 == 0)
+            updateTargetMineLoc();
+        if (targetMineLoc != null) {
+            if(here.equals(targetMineLoc)) {
+                tryMine(here);
+            }
+            else {
+                // TODO: write a moveTo(MapLocation loc) function
+                goTo(targetMineLoc);
+            }
+        }
+        else {
+            // TODO: write a explore() function to explore the map to find resources
+            explore();
+        }
+    }
 
     private void updateTargetMineLoc() throws GameActionException {
         if(targetMineLoc != null) {
@@ -17,7 +38,7 @@ public class Miner extends RobotPlayer{
                 return;
         }
         targetMineLoc = null;
-        MapLocation[] candidates = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), 20);
+        MapLocation[] candidates = rc.senseNearbyLocationsWithLead(20);
         int minDist = Integer.MAX_VALUE;
         int xsum = 0;
         int ysum = 0;
@@ -38,25 +59,5 @@ public class Miner extends RobotPlayer{
             return true;
         } else return false;
     }
-
-    public void run() throws GameActionException {
-        MapLocation curr = rc.getLocation();
-        if(targetMineLoc == null || !(targetMineLoc.equals(curr) && rc.senseLead(curr) > 0) && turnCount % 10 == 0)
-            updateTargetMineLoc();
-        if (targetMineLoc != null) {
-            if(curr.equals(targetMineLoc)) {
-                tryMine(curr);
-            }
-            else {
-                // TODO: write a moveTo(MapLocation loc) function
-
-                // moveTo(targetMineLoc)
-                moveTo(targetMineLoc);
-            }
-        }
-        else {
-            // TODO: write a explore() function to explore the map to find resources
-            explore();
-        }
-    }
 }
+

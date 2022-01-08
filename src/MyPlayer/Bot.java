@@ -21,6 +21,10 @@ public class Bot {
     public static Random rand;
     public static Direction lastExploreDir;
 
+    public Bot() {
+        return;
+    }
+
     public static enum Symmetry {
         VERTICAL,
         HORIZONTAL,
@@ -54,6 +58,12 @@ public class Bot {
         Laboratories = new MapLocation[100];
         Watchtotweres = new MapLocation[100];
         rc.senseNearbyRobots(50, enemy);
+    }
+
+    public void run() throws GameActionException {
+        turnCount++;
+        if(turnCount>1)
+            round++;
     }
 
     static Direction randomDirection() {

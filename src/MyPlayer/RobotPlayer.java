@@ -55,6 +55,8 @@ public strictfp class RobotPlayer {
         // You can also use indicators to save debug notes in replays.
         rc.setIndicatorString("Hello world!");
 
+        Bot bot;
+
         while (true) {
             // This code runs during the entire lifespan of the robot, which is why it is in an infinite
             // loop. If we ever leave this loop and return from run(), the robot dies! At the end of the
@@ -71,12 +73,12 @@ public strictfp class RobotPlayer {
                 // this into a different control structure!
                 switch (rc.getType()) {
                     case ARCHON:     Archon.run(rc);  break;
-                    case MINER:      Miner.run(rc);   break;
+                    case MINER:      bot = new Miner(rc); bot.run(); break;
                     case SOLDIER:    Soldier.run(rc); break;
-                    case LABORATORY: Laboratory.run(rc); break;// Examplefuncsplayer doesn't use any of these robot types below.
-                    case WATCHTOWER: Watchtotwer.run(rc); break;// You might want to give them a try!
-                    case BUILDER:    Builder.run(rc); break;
-                    case SAGE:       Sage.run(rc); break;
+                    case LABORATORY: // Examplefuncsplayer doesn't use any of these robot types below.
+                    case WATCHTOWER: // You might want to give them a try!
+                    case BUILDER:
+                    case SAGE:       break;
                 }
             } catch (GameActionException e) {
                 // Oh no! It looks like we did something illegal in the Battlecode world. You should

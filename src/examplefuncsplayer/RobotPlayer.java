@@ -1,7 +1,7 @@
 package examplefuncsplayer;
 
 import battlecode.common.*;
-import java.util.Random;
+import java.util.*;
 
 /**
  * RobotPlayer is the class that describes your main robot strategy.
@@ -49,10 +49,10 @@ public strictfp class RobotPlayer {
 
         // Hello world! Standard output is very useful for debugging.
         // Everything you say here will be directly viewable in your terminal when you run a match!
-        System.out.println("I'm a " + rc.getType() + " and I just got created! I have health " + rc.getHealth());
+        // System.out.println("I'm a " + rc.getType() + " and I just got created! I have health " + rc.getHealth());
 
         // You can also use indicators to save debug notes in replays.
-        rc.setIndicatorString("Hello world!");
+        // rc.setIndicatorString("Hello world!");
 
         while (true) {
             // This code runs during the entire lifespan of the robot, which is why it is in an infinite
@@ -60,10 +60,11 @@ public strictfp class RobotPlayer {
             // loop, we call Clock.yield(), signifying that we've done everything we want to do.
 
             turnCount += 1;  // We have now been alive for one more turn!
-            System.out.println("Age: " + turnCount + "; Location: " + rc.getLocation());
+            // System.out.println("Age: " + turnCount + "; Location: " + rc.getLocation());
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode.
             try {
+                // runMiner(rc);
                 // The same run() function is called for every robot on your team, even if they are
                 // different types. Here, we separate the control depending on the RobotType, so we can
                 // use different strategies on different robots. If you wish, you are free to rewrite
@@ -71,8 +72,8 @@ public strictfp class RobotPlayer {
                 switch (rc.getType()) {
                     case ARCHON:     runArchon(rc);  break;
                     case MINER:      runMiner(rc);   break;
-                    case SOLDIER:    runSoldier(rc); break;
-                    case LABORATORY: // Examplefuncsplayer doesn't use any of these robot types below.
+                    // case SOLDIER:    runSoldier(rc); break;
+                    // case LABORATORY: // Examplefuncsplayer doesn't use any of these robot types below.
                     case WATCHTOWER: // You might want to give them a try!
                     case BUILDER:
                     case SAGE:       break;
@@ -81,7 +82,7 @@ public strictfp class RobotPlayer {
                 // Oh no! It looks like we did something illegal in the Battlecode world. You should
                 // handle GameActionExceptions judiciously, in case unexpected events occur in the game
                 // world. Remember, uncaught exceptions cause your robot to explode!
-                System.out.println(rc.getType() + " GameActionException");
+                System.out.println(rc.getType() + " Exception");
                 e.printStackTrace();
 
             } catch (Exception e) {
@@ -123,33 +124,105 @@ public strictfp class RobotPlayer {
         }
     }
 
+    static class Tuple implements Comparable<Tuple>{
+        Direction dir;
+        Integer priority;
+
+        public Tuple(Direction dir, Integer priority){
+            this.dir = dir;
+            this.priority = priority;
+        }
+
+        public Direction getDir(){
+            return this.dir;
+        }
+
+        // public Integer getPriority(){
+        //     return this.priority;
+        // }
+
+        @Override
+        public int compareTo(Tuple tup) {
+            return this.priority - tup.priority;
+        }
+    }
+
     /**
      * Run a single turn for a Miner.
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
      */
     static void runMiner(RobotController rc) throws GameActionException {
         // Try to mine on squares around us.
+        // MapLocation me = rc.getLocation();
+        // for (int dx = -1; dx <= 1; dx++) {
+        //     for (int dy = -1; dy <= 1; dy++) {
+        //         MapLocation mineLocation = new MapLocation(me.x + dx, me.y + dy);
+        //         // Notice that the Miner's action cooldown is very low.
+        //         // You can mine multiple times per turn!
+        //         while (rc.canMineGold(mineLocation)) {
+        //             rc.mineGold(mineLocation);
+        //         }
+        //         while (rc.canMineLead(mineLocation)) {
+        //             rc.mineLead(mineLocation);
+        //         }
+        //     }
+        // }
+
+        // // Also try to move randomly.
+        // Direction dir = directions[rng.nextInt(directions.length)];
+        // if (rc.canMove(dir)) {
+        //     rc.move(dir);
+        //     System.out.println("I moved!");
+        // }
         MapLocation me = rc.getLocation();
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dy = -1; dy <= 1; dy++) {
-                MapLocation mineLocation = new MapLocation(me.x + dx, me.y + dy);
-                // Notice that the Miner's action cooldown is very low.
-                // You can mine multiple times per turn!
-                while (rc.canMineGold(mineLocation)) {
-                    rc.mineGold(mineLocation);
+        MapLocation newLoc = me.translate(3,5);
+        moveTo(newLoc, rc);
+    }
+
+    public static void moveTo(MapLocation destination, RobotController rc) throws  GameActionException{
+        Direction[] directions = {
+                Direction.NORTH,
+                Direction.NORTHEAST,
+                Direction.EAST,
+                Direction.SOUTHEAST,
+                Direction.SOUTH,
+                Direction.SOUTHWEST,
+                Direction.WEST,
+                Direction.NORTHWEST,
+        };
+        MapLocation curLoc = rc.getLocation();
+
+        if(!rc.isMovementReady()){
+            // Actions needed when rc can't move
+        }
+        else if(curLoc.isAdjacentTo(destination)){
+            rc.move(curLoc.directionTo(destination));
+        }
+        else{
+            PriorityQueue<Tuple> pQueue = new PriorityQueue<Tuple>();
+            
+            System.out.println("Destination : "+ destination.toString());
+            System.out.println("Start : "+ curLoc.toString()+ rc.senseRubble(curLoc));
+            System.out.println("current"+ curLoc.toString());
+
+            for(Direction direction : directions){
+                MapLocation adjLoc = curLoc.add(direction);
+                if(!rc.canSenseLocation(adjLoc) || rc.canSenseRobotAtLocation(adjLoc) ){
+                    continue;
                 }
-                while (rc.canMineLead(mineLocation)) {
-                    rc.mineLead(mineLocation);
-                }
+                Integer priority = rc.senseRubble(adjLoc) + adjLoc.distanceSquaredTo(destination);
+                System.out.println("Adjacent "+ adjLoc.toString() + "with cost " + rc.senseRubble(adjLoc));
+                    
+                System.out.println("Priority : " + priority + "=" + rc.senseRubble(adjLoc) + " + " + adjLoc.distanceSquaredTo(destination));
+                pQueue.add(new Tuple(direction, priority));
+                        
+
             }
+            
+            System.out.println("Final direction" + pQueue.poll().getDir());
+            rc.move(pQueue.poll().getDir());
         }
 
-        // Also try to move randomly.
-        Direction dir = directions[rng.nextInt(directions.length)];
-        if (rc.canMove(dir)) {
-            rc.move(dir);
-            System.out.println("I moved!");
-        }
     }
 
     /**

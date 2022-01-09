@@ -26,5 +26,6 @@ public class Soldier extends RobotPlayer{
             rc.move(dir);
             System.out.println("I moved!");
         }
+
     }
 }

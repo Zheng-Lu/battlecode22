@@ -232,60 +232,167 @@ public class Navigation extends Bot {
     }
 
 
-    // TODO: Move to specific given destination
-    public static void moveTo(MapLocation destination) throws  GameActionException{
-        Direction[] directions = {
-                Direction.NORTH,
-                Direction.NORTHEAST,
-                Direction.EAST,
-                Direction.SOUTHEAST,
-                Direction.SOUTH,
-                Direction.SOUTHWEST,
-                Direction.WEST,
-                Direction.NORTHWEST,
-        };
-        MapLocation curLoc = rc.getLocation();
+//    // TODO: Move to specific given destination
+//    public static void moveTo(MapLocation destination) throws  GameActionException{
+//        Direction[] directions = {
+//                Direction.NORTH,
+//                Direction.NORTHEAST,
+//                Direction.EAST,
+//                Direction.SOUTHEAST,
+//                Direction.SOUTH,
+//                Direction.SOUTHWEST,
+//                Direction.WEST,
+//                Direction.NORTHWEST,
+//        };
+//        MapLocation curLoc = rc.getLocation();
+//
+//        if(!rc.isMovementReady()){
+//            // Actions needed when rc can't move
+//        }
+//        else if(curLoc.isAdjacentTo(destination)){
+//            rc.move(curLoc.directionTo(destination));
+//        }
+//        else{
+//            PriorityQueue<Tuple> pQueue = new PriorityQueue<Tuple>();
+//
+//            pQueue.add(new Tuple(curLoc, rc.senseRubble(curLoc)));
+//            Hashtable<MapLocation, Integer> visited = new Hashtable<MapLocation, Integer>();
+//            Hashtable<MapLocation, MapLocation> path = new Hashtable<>();
+//            ArrayList<Direction> allDirections = new ArrayList<Direction>();
+//            //Store all the directions needed to reach the destination
+//            visited.put(curLoc, rc.senseRubble(curLoc));
+//            path.put(null, curLoc);
+//
+//            while (!pQueue.isEmpty()){
+//                MapLocation current = pQueue.poll().getLoc();
+//
+//                if(current.equals(destination)){
+//                    break;
+//                }
+//
+//                for(Direction direction : directions){
+//                    MapLocation adjLoc = current.add(direction);
+//                    Integer new_cost = rc.senseRubble(adjLoc) + visited.get(current);
+//                    if(!visited.containsKey(adjLoc)){
+//                        visited.put(adjLoc, new_cost);
+//                        Integer priority = new_cost + adjLoc.distanceSquaredTo(destination);
+//                        pQueue.add(new Tuple(adjLoc, priority));
+//                        path.put(current, adjLoc);
+//                        allDirections.add(direction);
+//                    }
+//                }
+//
+//            }
+//            rc.move(allDirections.get(1));
+//        }
+//    }
+private static class Edge implements Comparable<Edge>{
+    private final MapLocation from;
+    private final MapLocation to;
+    private  final int weight;
+    private  int priority = 10000;
 
-        if(!rc.isMovementReady()){
-            // Actions needed when rc can't move
+    public Edge(MapLocation f, MapLocation t, int w) {
+        from = f;
+        to = t;
+        weight = w;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+
+    public MapLocation getFrom() {
+        return from;
+    }
+    public MapLocation getTo() {
+        return to;
+    }
+    public int getWeight() {
+        return weight;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Edge edge = (Edge) o;
+        return this.to.equals(edge.to);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(to);
+    }
+
+
+    @Override
+    public int compareTo(Edge o) {
+        if (this == o) return 0;
+        return Integer.compare(this.priority, o.priority);
+    }
+
+}
+    //heuristic function
+    static int heuristic(MapLocation start, MapLocation destination) {
+        int dx = Math.abs(start.x - destination.x);
+        int dy = Math.abs(start.y - destination.y);
+        return 2*(dx + dy) - Math.min(dx, dy);
+    }
+
+    // A* moveTo
+    static void moveTo(RobotController rc, MapLocation destination) throws GameActionException {
+        PriorityQueue<Edge> open = new PriorityQueue<>();
+        PriorityQueue<Edge> closed = new PriorityQueue<>();
+        MapLocation start = rc.getLocation();
+        Edge startEdge = new Edge(start, start, 0);
+        if (start.equals(destination)) return;
+        closed.add(startEdge);
+        double c = 0.1;
+        int coolDown = rc.getMovementCooldownTurns();
+        System.out.println(coolDown);
+        for (Direction d : directions) {
+            MapLocation adj = start.add(d);
+            if(!rc.onTheMap(adj) || rc.canSenseRobotAtLocation(adj)) {
+                continue;
+            }
+            int weight = (int) Math.round(c * rc.senseRubble(adj));
+            Edge edge = new Edge(adj, adj, weight);
+            edge.setPriority(edge.getWeight() + heuristic(adj, destination));
+            open.add(edge);
+            if (coolDown < 30) {
+                closed.add(edge);
+            }
         }
-        else if(curLoc.isAdjacentTo(destination)){
-            rc.move(curLoc.directionTo(destination));
-        }
-        else{
-            PriorityQueue<Tuple> pQueue = new PriorityQueue<Tuple>();
 
-            pQueue.add(new Tuple(curLoc, rc.senseRubble(curLoc)));
-            Hashtable<MapLocation, Integer> visited = new Hashtable<MapLocation, Integer>();
-            Hashtable<MapLocation, MapLocation> path = new Hashtable<>();
-            ArrayList<Direction> allDirections = new ArrayList<Direction>();
-            //Store all the directions needed to reach the destination
-            visited.put(curLoc, rc.senseRubble(curLoc));
-            path.put(null, curLoc);
-
-            while (!pQueue.isEmpty()){
-                MapLocation current = pQueue.poll().getLoc();
-
-                if(current.equals(destination)){
-                    break;
-                }
-
-                for(Direction direction : directions){
-                    MapLocation adjLoc = current.add(direction);
-                    Integer new_cost = rc.senseRubble(adjLoc) + visited.get(current);
-                    if(!visited.containsKey(adjLoc)){
-                        visited.put(adjLoc, new_cost);
-                        Integer priority = new_cost + adjLoc.distanceSquaredTo(destination);
-                        pQueue.add(new Tuple(adjLoc, priority));
-                        path.put(current, adjLoc);
-                        allDirections.add(direction);
+        if (coolDown > 30) {
+            int r = Math.min(5 + coolDown/10, rc.getType().visionRadiusSquared / 3);
+            while (!open.isEmpty()) {
+                Edge edge1 = open.poll();
+                closed.add(edge1);
+                MapLocation midPoint = edge1.getTo();
+                for (Direction d : directions) {
+                    MapLocation adj = midPoint.add(d);
+                    if (!start.isWithinDistanceSquared(adj, r) || rc.canSenseRobotAtLocation(adj) || !rc.onTheMap(adj)) {
+                        continue;
+                    }
+                    int weight = (int) Math.round(c * rc.senseRubble(adj));
+                    Edge edge = new Edge(edge1.getFrom(), adj, edge1.getWeight() + weight);
+                    if (!open.contains(edge) && !closed.contains(edge)) {
+                        edge.setPriority(edge.getWeight() + heuristic(adj, destination));
+                        open.add(edge);
                     }
                 }
-
             }
-            rc.move(allDirections.get(1));
+        }
+
+        Edge edge = closed.poll();
+        Direction direction = start.directionTo(edge.from);
+        if (rc.canMove(direction)) {
+            rc.move(direction);
         }
     }
+
 
     public static boolean goTo(MapLocation theDest, NavSafetyPolicy theSafety) throws GameActionException {
         if (!theDest.equals(dest)) {

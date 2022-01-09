@@ -9,8 +9,8 @@ import static MyPlayer.Navigation.*;
 public class Miner extends Unit{
     MapLocation targetMineLoc;
 
-    public Miner(RobotController r) throws GameActionException {
-        super(r);
+    public Miner(RobotController rc) throws GameActionException {
+        super(rc);
     }
 
     public void run() throws GameActionException {

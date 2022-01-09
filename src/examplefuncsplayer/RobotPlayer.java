@@ -72,10 +72,10 @@ public strictfp class RobotPlayer {
                 switch (rc.getType()) {
                     case ARCHON:     runArchon(rc);  break;
                     case MINER:      runMiner(rc);   break;
-                    // case SOLDIER:    runSoldier(rc); break;
-                    // case LABORATORY: // Examplefuncsplayer doesn't use any of these robot types below.
-                    case WATCHTOWER: // You might want to give them a try!
-                    case BUILDER:
+                    case SOLDIER:    runSoldier(rc); break;
+                    case BUILDER:    runBuilder(rc); break;
+                    //case LABORATORY: // Examplefuncsplayer doesn't use any of these robot types below.
+                    //case WATCHTOWER: // You might want to give them a try!
                     case SAGE:       break;
                 }
             } catch (GameActionException e) {
@@ -121,10 +121,17 @@ public strictfp class RobotPlayer {
 //            if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
 //                rc.buildRobot(RobotType.SOLDIER, dir);
 //            }
-            // Let's try to build a miner.
-            rc.setIndicatorString("Trying to build a miner");
-            if (rc.canBuildRobot(RobotType.MINER, dir)) {
-                rc.buildRobot(RobotType.MINER, dir);
+
+//            // Let's try to build a miner.
+//            rc.setIndicatorString("Trying to build a miner");
+//            if (rc.canBuildRobot(RobotType.MINER, dir)) {
+//                rc.buildRobot(RobotType.MINER, dir);
+//            }
+
+            // Let's try to build a builder.
+            rc.setIndicatorString("Trying to build a builder");
+            if (rc.canBuildRobot(RobotType.BUILDER, dir)) {
+                rc.buildRobot(RobotType.BUILDER, dir);
             }
         }
     }
@@ -134,31 +141,34 @@ public strictfp class RobotPlayer {
      * This code is wrapped inside the infinite loop in run(), so it is called once per turn.
      */
     static void runMiner(RobotController rc) throws GameActionException {
-        // Try to mine on squares around us.
-        // MapLocation me = rc.getLocation();
-        // for (int dx = -1; dx <= 1; dx++) {
-        //     for (int dy = -1; dy <= 1; dy++) {
-        //         MapLocation mineLocation = new MapLocation(me.x + dx, me.y + dy);
-        //         // Notice that the Miner's action cooldown is very low.
-        //         // You can mine multiple times per turn!
-        //         while (rc.canMineGold(mineLocation)) {
-        //             rc.mineGold(mineLocation);
-        //         }
-        //         while (rc.canMineLead(mineLocation)) {
-        //             rc.mineLead(mineLocation);
-        //         }
-        //     }
-        // }
 
-        // // Also try to move randomly.
-        // Direction dir = directions[rng.nextInt(directions.length)];
-        // if (rc.canMove(dir)) {
-        //     rc.move(dir);
-        //     System.out.println("I moved!");
-        // }
-        MapLocation me = rc.getLocation();
-        MapLocation newLoc = me.translate(3,5);
-        moveTo(newLoc, rc);
+        // Try to mine on squares around us.
+         MapLocation me = rc.getLocation();
+         for (int dx = -1; dx <= 1; dx++) {
+             for (int dy = -1; dy <= 1; dy++) {
+                 MapLocation mineLocation = new MapLocation(me.x + dx, me.y + dy);
+                 // Notice that the Miner's action cooldown is very low.
+                 // You can mine multiple times per turn!
+                 while (rc.canMineGold(mineLocation)) {
+                     rc.mineGold(mineLocation);
+                 }
+                 while (rc.canMineLead(mineLocation)) {
+                     rc.mineLead(mineLocation);
+                 }
+             }
+         }
+
+         // Also try to move randomly.
+         Direction dir = directions[rng.nextInt(directions.length)];
+         if (rc.canMove(dir)) {
+             rc.move(dir);
+             System.out.println("I moved!");
+         }
+
+//        MapLocation me = rc.getLocation();
+//        MapLocation newLoc = me.translate(3,5);
+//        moveTo(newLoc, rc);
+
     }
 
     public static void moveTo(MapLocation destination, RobotController rc) throws  GameActionException{
@@ -234,4 +244,31 @@ public strictfp class RobotPlayer {
             System.out.println("I moved!");
         }
     }
+
+    static void runBuilder(RobotController rc) throws GameActionException {
+        Direction dir = directions[rng.nextInt(directions.length)];
+        Direction dir2 = directions[rng.nextInt(directions.length)];
+
+        if (rc.isActionReady()) {
+            // Build a laboratory
+            if (rc.canBuildRobot(RobotType.LABORATORY, dir)) {
+                rc.buildRobot(RobotType.LABORATORY, dir);
+            }
+
+            // Build a Watchtotwer
+            if (rc.canBuildRobot(RobotType.WATCHTOWER, dir2)) {
+                rc.buildRobot(RobotType.WATCHTOWER, dir2);
+            }
+        }
+
+        // Also try to move randomly.
+        Direction dir3 = directions[rng.nextInt(directions.length)];
+        if (rc.canMove(dir3)) {
+            rc.move(dir3);
+            System.out.println("I moved!");
+        }
+
+    }
+
+
 }

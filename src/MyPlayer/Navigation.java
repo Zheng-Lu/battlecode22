@@ -341,6 +341,7 @@ private static class Edge implements Comparable<Edge>{
     }
 
     // A* moveTo
+    static int lastHeuristic = 0;
     static void moveTo(RobotController rc, MapLocation destination) throws GameActionException {
         PriorityQueue<Edge> open = new PriorityQueue<>();
         PriorityQueue<Edge> closed = new PriorityQueue<>();
@@ -348,7 +349,7 @@ private static class Edge implements Comparable<Edge>{
         Edge startEdge = new Edge(start, start, 0);
         if (start.equals(destination)) return;
         closed.add(startEdge);
-        double c = 0.1;
+        double c = 0.075;
         int coolDown = rc.getMovementCooldownTurns();
         System.out.println(coolDown);
         for (Direction d : directions) {
@@ -386,8 +387,26 @@ private static class Edge implements Comparable<Edge>{
             }
         }
 
+        Direction direction;
         Edge edge = closed.poll();
-        Direction direction = start.directionTo(edge.from);
+        if (edge == null) {
+            direction = start.directionTo(destination);}
+        else {
+            int newHeuristic;
+            // check if the robot stuck somewhere
+            if (turnCount % 4 == 0) {
+                newHeuristic = heuristic(edge.getTo(), destination);
+                if (Math.abs(lastHeuristic-newHeuristic) < 3 && rc.getMovementCooldownTurns() < 20){
+                    direction = start.directionTo(destination);
+                }else {
+                    direction = start.directionTo(edge.from);
+                }
+                lastHeuristic = newHeuristic;
+            }else{
+                direction = start.directionTo(edge.from);
+            }
+        }
+
         if (rc.canMove(direction)) {
             rc.move(direction);
         }

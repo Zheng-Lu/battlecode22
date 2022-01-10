@@ -76,7 +76,7 @@ public strictfp class RobotPlayer {
                     case MINER:      bot = new Miner(rc); bot.run(); break;
                     case SOLDIER:    Soldier.run(rc); break;
                     case LABORATORY: // Examplefuncsplayer doesn't use any of these robot types below.
-                    case WATCHTOWER: // You might want to give them a try!
+                    case WATCHTOWER: Watchtower.run(rc); break;// You might want to give them a try!
                     case BUILDER:
                     case SAGE:       break;
                 }

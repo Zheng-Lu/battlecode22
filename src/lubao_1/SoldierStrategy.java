@@ -1,4 +1,4 @@
-package player15;
+package lubao_1;
 
 import battlecode.common.*;
 

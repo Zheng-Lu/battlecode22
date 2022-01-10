@@ -1,4 +1,4 @@
-package player15;
+package lubao_1;
 
 import battlecode.common.*;
 
@@ -56,7 +56,7 @@ strictfp class WatchtowerStrategy {
             if (shortestDistance <= rc.getType().actionRadiusSquared /* || enemies.length > 0 */) {
                 if (rc.canTransform() && rc.isTransformReady()) {
                     RobotPlayer.stepOffRubble(rc, me);
-                    if (rc.canTransform()) {
+                    if (rc.isTransformReady()) {
                         rc.transform();
                     }
                     // if (RobotPlayer.isLandSuitableForBuilding(rc, me)) {

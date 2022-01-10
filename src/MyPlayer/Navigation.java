@@ -349,7 +349,7 @@ private static class Edge implements Comparable<Edge>{
         Edge startEdge = new Edge(start, start, 0);
         if (start.equals(destination)) return;
         closed.add(startEdge);
-        double c = 0.075;
+        double c = 0.15;
         int coolDown = rc.getMovementCooldownTurns();
         System.out.println(coolDown);
         for (Direction d : directions) {

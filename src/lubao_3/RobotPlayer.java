@@ -1,9 +1,7 @@
-package lubao_1;
+package lubao_3;
 
 import battlecode.common.*;
 
-import java.util.Objects;
-import java.util.PriorityQueue;
 import java.util.Random;
 
 class SharedArrayTargetAndIndex {
@@ -83,6 +81,23 @@ public strictfp class RobotPlayer {
     static MapLocation backupTarget;
     static int actionRadiusSquared;
 
+    static MapLocation findNearestEmptyTile(RobotController rc, MapLocation me) throws GameActionException {
+        MapLocation[] nearbyTiles = rc.getAllLocationsWithinRadiusSquared(me, 100);
+        int minDistance = 10000;
+        MapLocation nearestFreeTile = null;
+
+        for (MapLocation tile : nearbyTiles) {
+            if (rc.canSenseLocation(tile) && !rc.canSenseRobotAtLocation(tile) && rc.senseLead(tile) == 0 && rc.senseGold(tile) == 0) {
+                if (nearestFreeTile == null || me.distanceSquaredTo(tile) < minDistance) {
+                    nearestFreeTile = tile;
+                    minDistance = me.distanceSquaredTo(nearestFreeTile);
+                }
+            }
+        }
+        
+        return nearestFreeTile;
+    }
+
     static TripleTarget acquireLocalTargets(RobotController rc, MapLocation globalTarget, RobotInfo[] enemies,
             MapLocation me) throws GameActionException {
         int lowestHPDangerousEnemy = 10000;
@@ -90,9 +105,10 @@ public strictfp class RobotPlayer {
         MapLocation primaryTarget = globalTarget;
         MapLocation secondaryTarget = globalTarget;
         MapLocation tertiaryTarget = globalTarget;
+
         for (RobotInfo enemy : enemies) {
             if (enemy.type.equals(RobotType.ARCHON)) {
-                RobotPlayer.addLocationToSharedArray(rc, enemy.location, 0, 0);
+                Comms.setOffensiveLocation(rc, enemy.location);
             }
             int distanceSquaredToEnemy = me.distanceSquaredTo(enemy.location);
             if (distanceSquaredToEnemy <= actionRadiusSquared && (enemy.type.equals(RobotType.SOLDIER)
@@ -126,29 +142,47 @@ public strictfp class RobotPlayer {
      * location.
      * 
      * @param rc
+     * @param
      * @param me           - position of self. Is passing this cheaper than
      *                     rc.getLocation()?
      * @return
      * @throws GameActionException
      */
-    static SharedArrayTargetAndIndex locateCombatTarget(RobotController rc, MapLocation me) throws GameActionException {
+    static MapLocation locateCombatTarget(RobotController rc, MapLocation me, MapLocation backupLocation) throws GameActionException {
 
         boolean usingOffensiveTarget = false;
-        MapLocation target = getDefensiveTarget(rc);
-        if (RobotPlayer.targetDoesntExist(target)) {
-            target = getOffensiveTarget(rc);
-            usingOffensiveTarget = true;
+        MapLocation target = backupLocation;
+
+        ArchonLocation[] archonLocations = Comms.getArchonLocations(rc);
+
+        boolean shouldDefend = false;
+
+        for (ArchonLocation archLoc : archonLocations) {
+            if (archLoc.exists && archLoc.shouldDefend) {
+                shouldDefend = true;
+                if (target == null || me.distanceSquaredTo(archLoc.location) < me.distanceSquaredTo(target)) {
+                    target = archLoc.location;
+                }
+            }
+        }
+
+        if (!shouldDefend) {
+            EnemyLocation oTarget = Comms.getOffensiveLocation(rc);
+            if (oTarget.exists) {
+                target = oTarget.location;
+                usingOffensiveTarget = true;
+            }
         }
 
         if (usingOffensiveTarget && rc.canSenseLocation(target)) {
             if (rc.canSenseRobotAtLocation(target)) {
                 if (rc.senseRobotAtLocation(target).type != RobotType.ARCHON) {
-                    rc.writeSharedArray(0, 0);
-                    target = new MapLocation(0, 0);
+                    Comms.clearOffensiveLocation(rc);
+                    target = backupTarget;
                 }
             } else {
-                rc.writeSharedArray(0, 0);
-                target = new MapLocation(0, 0);
+                Comms.clearOffensiveLocation(rc);
+                target = backupTarget;
             }
         }
 
@@ -161,22 +195,27 @@ public strictfp class RobotPlayer {
             usingOffensiveTarget = false;
         }
 
-        int index = -1;
-        for (int i = SHARED_ARRAY_ENEMY_START_INDEX; i < 64; i++) {
-            int bitvector = rc.readSharedArray(i);
-            if (bitvector == 0) {
-                index = i;
-                break;
-            }
-            MapLocation loc = decodeLocationFromBitvector(bitvector);
-            if (me.distanceSquaredTo(loc) < me.distanceSquaredTo(target)) {
-                target = loc;
+        // int index = -1;
+        // for (int i = SHARED_ARRAY_ENEMY_START_INDEX; i < 64; i++) {
+        //     int bitvector = rc.readSharedArray(i);
+        //     if (bitvector == 0) {
+        //         index = i;
+        //         break;
+        //     }
+        //     MapLocation loc = decodeLocationFromBitvector(bitvector);
+        //     if (me.distanceSquaredTo(loc) < me.distanceSquaredTo(target)) {
+        //         target = loc;
+        //     }
+        // }
+
+        EnemyLocation[] enemiesInSharedArray = Comms.getEnemyLocations(rc);
+        for (EnemyLocation loc : enemiesInSharedArray) {
+            if (me.distanceSquaredTo(loc.location) < me.distanceSquaredTo(target)) {
+                target = loc.location;
             }
         }
 
-        SharedArrayTargetAndIndex result = new SharedArrayTargetAndIndex(target, index);
-
-        return result;
+        return target;
     }
 
     static void attackGlobalTargetIfAble(RobotController rc, MapLocation target, MapLocation me)
@@ -368,16 +407,30 @@ public strictfp class RobotPlayer {
     }
 
     static void move2(RobotController rc, MapLocation target, int recursionLimit) throws GameActionException {
-        simpleShortestPath(rc, rc.getLocation(), target, 0, 0, recursionLimit);
+        Random rng = new Random();
+        simpleShortestPath(rc, rc.getLocation(), target, 0, 0, recursionLimit, rng);
+
+        // Direction dir = AdvancedMove(rc, target);
+        // if (rc.canMove(dir)) {
+        //     rc.move(dir);
+        // }
     }
 
-    static int simpleShortestPath(RobotController rc, MapLocation start, MapLocation target, int currentWeight, int recursionLevel, int recursionLimit) throws GameActionException {
+    static int simpleShortestPath(RobotController rc, MapLocation start, MapLocation target, int currentWeight, int recursionLevel, int recursionLimit, Random rng) throws GameActionException {
         if (recursionLevel == recursionLimit) {
             int finalWeight = currentWeight + rc.senseRubble(start) + (int)Math.sqrt(start.distanceSquaredTo(target));
             return finalWeight;
         }
 
-        currentWeight += rc.senseRubble(start);
+        int rubbleAmount = rc.senseRubble(start);
+
+        rubbleAmount /= 10;
+
+        if (rubbleAmount > 50 && rng.nextInt(10) > 1) {
+            rubbleAmount *= 10;
+        }
+
+        currentWeight += rubbleAmount;
 
         
         Direction initialDir = start.directionTo(target);
@@ -386,19 +439,19 @@ public strictfp class RobotPlayer {
         MapLocation leftTile = rc.adjacentLocation(leftDir);
         int leftWeight = leftTile.distanceSquaredTo(target);
         if (rc.canSenseLocation(leftTile) && !rc.canSenseRobotAtLocation(leftTile)) {
-            leftWeight = simpleShortestPath(rc, leftTile, target, currentWeight, recursionLevel + 1, recursionLimit);
+            leftWeight = simpleShortestPath(rc, leftTile, target, currentWeight, recursionLevel + 1, recursionLimit, rng);
         }
         
         MapLocation centerTile = rc.adjacentLocation(initialDir);
         int centerWeight = centerTile.distanceSquaredTo(target);
         if (rc.canSenseLocation(centerTile) && !rc.canSenseRobotAtLocation(centerTile)) {
-            centerWeight = simpleShortestPath(rc, centerTile, target, currentWeight, recursionLevel + 1, recursionLimit);
+            centerWeight = simpleShortestPath(rc, centerTile, target, currentWeight, recursionLevel + 1, recursionLimit, rng);
         }
         
         MapLocation rightTile = rc.adjacentLocation(rightDir);
         int rightWeight = centerTile.distanceSquaredTo(target);
         if (rc.canSenseLocation(rightTile) && !rc.canSenseRobotAtLocation(rightTile)) {
-            rightWeight = simpleShortestPath(rc, rightTile, target, currentWeight, recursionLevel + 1, recursionLimit);
+            rightWeight = simpleShortestPath(rc, rightTile, target, currentWeight, recursionLevel + 1, recursionLimit, rng);
         }
 
         if (recursionLevel != 0) {
@@ -590,132 +643,6 @@ public strictfp class RobotPlayer {
         return suitable;
     }
 
-    private static class Edge implements Comparable<Edge>{
-        private final MapLocation from;
-        private final MapLocation to;
-        private  final int weight;
-        public  int priority = 10000;
-
-        public Edge(MapLocation f, MapLocation t, int w) {
-            from = f;
-            to = t;
-            weight = w;
-        }
-
-        public void setPriority(int priority) {
-            this.priority = priority;
-        }
-
-        public MapLocation getFrom() {
-            return from;
-        }
-        public MapLocation getTo() {
-            return to;
-        }
-        public int getWeight() {
-            return weight;
-        }
-
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Edge edge = (Edge) o;
-            return this.to.equals(edge.getTo());
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(to);
-        }
-
-
-        @Override
-        public int compareTo(Edge o) {
-            return Integer.compare(this.priority, o.priority);
-        }
-
-    }
-    //heuristic function
-    static int heuristic(MapLocation start, MapLocation destination) {
-        int dx = Math.abs(start.x - destination.x);
-        int dy = Math.abs(start.y - destination.y);
-        return 2*(dx + dy) - Math.min(dx, dy);
-    }
-
-    // A* moveTo
-    static int lastHeuristic = 0;
-    static void moveTo(RobotController rc, MapLocation destination) throws GameActionException {
-        PriorityQueue<Edge> open = new PriorityQueue<>();
-        PriorityQueue<Edge> closed = new PriorityQueue<>();
-        MapLocation start = rc.getLocation();
-        Edge startEdge = new Edge(start, start, 0);
-        if (start.equals(destination)) return;
-        closed.add(startEdge);
-        double c = 0.15;
-        int coolDown = rc.getMovementCooldownTurns();
-        System.out.println(coolDown);
-        for (Direction d : directions) {
-            MapLocation adj = start.add(d);
-            if(!rc.onTheMap(adj) || rc.canSenseRobotAtLocation(adj)) {
-                continue;
-            }
-            int weight = (int) Math.round(c * rc.senseRubble(adj));
-            Edge edge = new Edge(adj, adj, weight);
-            edge.setPriority(edge.getWeight() + heuristic(adj, destination));
-            open.add(edge);
-            if (coolDown < 30) {
-                closed.add(edge);
-            }
-        }
-
-        if (coolDown > 30) {
-            int r = Math.min(5 + coolDown/10, rc.getType().visionRadiusSquared / 3);
-            while (!open.isEmpty()) {
-                Edge edge1 = open.poll();
-                closed.add(edge1);
-                MapLocation midPoint = edge1.getTo();
-                for (Direction d : directions) {
-                    MapLocation adj = midPoint.add(d);
-                    if (!start.isWithinDistanceSquared(adj, r) || rc.canSenseRobotAtLocation(adj) || !rc.onTheMap(adj)) {
-                        continue;
-                    }
-                    int weight = (int) Math.round(c * rc.senseRubble(adj));
-                    Edge edge = new Edge(edge1.getFrom(), adj, edge1.getWeight() + weight);
-                    if (!open.contains(edge) && !closed.contains(edge)) {
-                        edge.setPriority(edge.getWeight() + heuristic(adj, destination));
-                        open.add(edge);
-                    }
-                }
-            }
-        }
-
-        Direction direction;
-        Edge edge = closed.poll();
-        if (edge == null) {
-            direction = start.directionTo(destination);}
-        else {
-            int newHeuristic;
-            // check if the robot stuck somewhere
-            if (turnCount % 4 == 0) {
-                newHeuristic = heuristic(edge.getTo(), destination);
-                if (Math.abs(lastHeuristic-newHeuristic) < 3 && rc.getMovementCooldownTurns() < 20){
-                    direction = start.directionTo(destination);
-                }else {
-                    direction = start.directionTo(edge.getFrom());
-                }
-                lastHeuristic = newHeuristic;
-            }else{
-                direction = start.directionTo(edge.getFrom());
-            }
-        }
-
-
-        if (rc.canMove(direction)) {
-            rc.move(direction);
-        }
-    }
 
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
@@ -725,29 +652,30 @@ public strictfp class RobotPlayer {
         actionRadiusSquared = rc.getType().actionRadiusSquared;
         backupTarget = getRandomMapLocation();
 
+
         while (true) {
             try {
                 switch (rc.getType()) {
                     case ARCHON:
-                        ArchonStrategy.run(rc);
+                        Archon.run(rc);
                         break;
                     case MINER:
-                        MinerStrategy.run(rc);
+                        Miner.run(rc);
                         break;
                     case SOLDIER:
-                        SoldierStrategy.run(rc);
+                        Soldier.run(rc);
                         break;
                     case LABORATORY:
-                        LaboratoryStrategy.run(rc);
+                        Laboratory.run(rc);
                         break;
                     case WATCHTOWER:
                         Watchtower.run(rc);
                         break;
                     case BUILDER:
-                        BuilderStrategy.run(rc);
+                        Builder.run(rc);
                         break;
                     case SAGE:
-                        SageStrategy.run(rc);
+                        Sage.run(rc);
                         break;
                 }
             } catch (GameActionException e) {

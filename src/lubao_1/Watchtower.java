@@ -3,7 +3,7 @@ package lubao_1;
 import battlecode.common.*;
 
 
-strictfp class WatchtowerStrategy {
+strictfp class Watchtower {
     static final RobotType myType = RobotType.WATCHTOWER;
     final static int ATTACK_RADIUS_SQUARED = myType.actionRadiusSquared;
 

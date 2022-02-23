@@ -1,3 +1,17 @@
+# Battlecode 2022 Report - Team "404 Not Found"
+This repo contains the all the versions of my submissions for [2022 MIT Battlecode Programming Competition](https://battlecode.org/)
+
+<h2 align="center">Results</h2>
+
+![image](https://user-images.githubusercontent.com/71692995/155426621-6d129a42-dc47-4f5f-b693-0f0668d81408.png)
+
+
+
+
+
+
+
+
 # Battlecode 2022 Scaffold
 
 This is the Battlecode 2022 scaffold, containing an `examplefuncsplayer`. Read https://play.battlecode.org/getting-started!

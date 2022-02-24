@@ -5,25 +5,25 @@ This repo contains the all the versions of my submissions for [2022 MIT Battleco
 
 <h2 align="center">
     <a href="https://challonge.com/bc22_sprint2">
-    Battlecode 2022 Sprint Tournament 2
+    Placed Rank 9th in Battlecode 2022 Sprint Tournament 2
     </a>
 </h2>
 
-![image](https://user-images.githubusercontent.com/71692995/155427666-7a6cf75a-0ac1-4e2c-a0fa-3c84dc17e466.png)
+![image](https://user-images.githubusercontent.com/71692995/155434082-d043e2f4-1733-411d-bc8b-3af77ee1835e.png)
 
 <h2 align="center">
     <a href="https://challonge.com/w2dpjaa3">
-    Battlecode 2022 International Qualifying Tournament
+    Placed Rank 5th in Battlecode 2022 International Qualifying Tournament
     </a>
 </h2>
 
 ![image](https://user-images.githubusercontent.com/71692995/155427839-cbb7b84a-7c23-4e07-a98c-7c75f58651b9.png)
 
+<h2 align="center">
+    Reached Rank 9th in Battlecode 2022 Gerneral Ranking
+</h2>
 
-
-
-
-
+![d30870f0cdf5218837d440bceeb0c37](https://user-images.githubusercontent.com/71692995/155449946-42731843-531b-4ce6-aa75-f9f97e834bdf.jpg)
 
 
 

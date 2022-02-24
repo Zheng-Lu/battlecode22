@@ -1,9 +1,16 @@
 # Battlecode 2022 Report - Team "404 Not Found"
 This repo contains the all the versions of my submissions for [2022 MIT Battlecode Programming Competition](https://battlecode.org/)
 
-<h2 align="center">Results</h2>
+<h1 align="center">Results</h1>
 
-![image](https://user-images.githubusercontent.com/71692995/155426621-6d129a42-dc47-4f5f-b693-0f0668d81408.png)
+<h2 align="center">[Battlecode 2022 Sprint Tournament 2](https://challonge.com/bc22_sprint2)</h2>
+
+![image](https://user-images.githubusercontent.com/71692995/155427666-7a6cf75a-0ac1-4e2c-a0fa-3c84dc17e466.png)
+
+<h2 align="center">[Battlecode 2022 International Qualifying Tournament](https://challonge.com/w2dpjaa3)</h2>
+
+![image](https://user-images.githubusercontent.com/71692995/155427839-cbb7b84a-7c23-4e07-a98c-7c75f58651b9.png)
+
 
 
 
